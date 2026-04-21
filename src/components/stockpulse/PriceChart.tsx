@@ -133,15 +133,16 @@ export function PriceChart({
               <Tooltip
                 contentStyle={{ background: "var(--panel)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }}
                 labelStyle={{ color: "var(--text-dim)" }}
-                formatter={(v: unknown, name: string) => name === "range" || name === "body" ? null : `${sym}${Number(v).toFixed(2)}`}
+                formatter={(v: unknown, name: string) => {
+                  if (name === "range" || name === "body" || name === "_candle") return null;
+                  return [`${sym}${Number(v).toFixed(2)}`, name];
+                }}
               />
               {prevClose != null && (
                 <ReferenceLine y={prevClose} stroke="var(--text-dim)" strokeDasharray="4 4" />
               )}
-              {/* wick */}
-              <Bar dataKey="range" fill="var(--text-dim)" barSize={1} />
-              {/* body — split by bull/bear via two stacked sets isn't trivial; use line for clarity */}
-              <Line type="monotone" dataKey="close" stroke={stroke} strokeWidth={2} dot={false} />
+              {/* Invisible bar that drives the candlestick shape rendering */}
+              <Bar dataKey="high" shape={<Candlestick />} isAnimationActive={false} legendType="none" />
             </ComposedChart>
           ) : (
             <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
