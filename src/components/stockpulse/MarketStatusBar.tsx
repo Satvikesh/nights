@@ -21,14 +21,16 @@ function isMarketOpen(tz: string, openH: number, closeH: number): boolean {
 }
 
 export function MarketStatusBar() {
+  const [mounted, setMounted] = useState(false);
   const [, force] = useState(0);
   useEffect(() => {
+    setMounted(true);
     const id = setInterval(() => force((n) => n + 1), 1000);
     return () => clearInterval(id);
   }, []);
 
-  const nseOpen = isMarketOpen("Asia/Kolkata", 9.25, 15.5);
-  const usOpen = isMarketOpen("America/New_York", 9.5, 16);
+  const nseOpen = mounted ? isMarketOpen("Asia/Kolkata", 9.25, 15.5) : false;
+  const usOpen = mounted ? isMarketOpen("America/New_York", 9.5, 16) : false;
 
   return (
     <div className="flex flex-wrap items-center gap-x-6 gap-y-2 px-4 py-2 text-xs mono">
@@ -39,14 +41,14 @@ export function MarketStatusBar() {
       <div className="flex items-center gap-2">
         <span className={`mkt-dot ${nseOpen ? "live bull" : "dim"}`} style={{ backgroundColor: nseOpen ? "var(--bull)" : "var(--text-dim)", color: nseOpen ? "var(--bull)" : "var(--text-dim)" }} />
         <span className="dim">NSE</span>
-        <span>{timeIn("Asia/Kolkata")} IST</span>
-        <span className={nseOpen ? "bull" : "dim"}>{nseOpen ? "OPEN" : "CLOSED"}</span>
+        <span suppressHydrationWarning>{mounted ? `${timeIn("Asia/Kolkata")} IST` : "-- IST"}</span>
+        <span className={nseOpen ? "bull" : "dim"} suppressHydrationWarning>{mounted ? (nseOpen ? "OPEN" : "CLOSED") : "—"}</span>
       </div>
       <div className="flex items-center gap-2">
         <span className={`mkt-dot ${usOpen ? "live bull" : "dim"}`} style={{ backgroundColor: usOpen ? "var(--bull)" : "var(--text-dim)", color: usOpen ? "var(--bull)" : "var(--text-dim)" }} />
         <span className="dim">NYSE</span>
-        <span>{timeIn("America/New_York")} EST</span>
-        <span className={usOpen ? "bull" : "dim"}>{usOpen ? "OPEN" : "CLOSED"}</span>
+        <span suppressHydrationWarning>{mounted ? `${timeIn("America/New_York")} EST` : "-- EST"}</span>
+        <span className={usOpen ? "bull" : "dim"} suppressHydrationWarning>{mounted ? (usOpen ? "OPEN" : "CLOSED") : "—"}</span>
       </div>
       {!isLiveBackend && (
         <div className="ml-auto flex items-center gap-2 rounded-md border border-[color:var(--border)] bg-[color:var(--panel)] px-2 py-1 text-[10px] uppercase tracking-wider dim">
