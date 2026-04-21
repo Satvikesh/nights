@@ -5,6 +5,30 @@ import {
 } from "recharts";
 import type { Candle, Period } from "@/lib/stockpulse/types";
 
+// Custom candlestick shape: wick + body colored by direction
+const Candlestick = (props: any) => {
+  const { x = 0, width = 0, payload, yAxis } = props;
+  if (!payload || !yAxis?.scale) return null;
+  const { open, close, high, low } = payload;
+  const isBull = close >= open;
+  const color = isBull ? "hsl(var(--bull-hsl, 158 64% 52%))" : "hsl(var(--bear-hsl, 0 84% 60%))";
+  const fill = isBull ? "var(--bull)" : "var(--bear)";
+  const yHigh = yAxis.scale(high);
+  const yLow = yAxis.scale(low);
+  const yOpen = yAxis.scale(open);
+  const yClose = yAxis.scale(close);
+  const bodyTop = Math.min(yOpen, yClose);
+  const bodyH = Math.max(1, Math.abs(yClose - yOpen));
+  const cx = x + width / 2;
+  const bodyW = Math.max(2, width * 0.7);
+  return (
+    <g>
+      <line x1={cx} x2={cx} y1={yHigh} y2={yLow} stroke={fill} strokeWidth={1} />
+      <rect x={cx - bodyW / 2} y={bodyTop} width={bodyW} height={bodyH} fill={fill} stroke={fill} />
+    </g>
+  );
+};
+
 const PERIODS: Period[] = ["1D", "5D", "1M", "3M", "6M", "1Y", "5Y"];
 type Style = "line" | "area" | "candle" | "volume";
 
@@ -109,15 +133,16 @@ export function PriceChart({
               <Tooltip
                 contentStyle={{ background: "var(--panel)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }}
                 labelStyle={{ color: "var(--text-dim)" }}
-                formatter={(v: unknown, name: string) => name === "range" || name === "body" ? null : `${sym}${Number(v).toFixed(2)}`}
+                formatter={(v: unknown, name: string) => {
+                  if (name === "range" || name === "body" || name === "_candle") return null;
+                  return [`${sym}${Number(v).toFixed(2)}`, name];
+                }}
               />
               {prevClose != null && (
                 <ReferenceLine y={prevClose} stroke="var(--text-dim)" strokeDasharray="4 4" />
               )}
-              {/* wick */}
-              <Bar dataKey="range" fill="var(--text-dim)" barSize={1} />
-              {/* body — split by bull/bear via two stacked sets isn't trivial; use line for clarity */}
-              <Line type="monotone" dataKey="close" stroke={stroke} strokeWidth={2} dot={false} />
+              {/* Invisible bar that drives the candlestick shape rendering */}
+              <Bar dataKey="high" shape={<Candlestick />} isAnimationActive={false} legendType="none" />
             </ComposedChart>
           ) : (
             <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
