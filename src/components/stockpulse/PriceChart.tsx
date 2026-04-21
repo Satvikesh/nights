@@ -160,8 +160,10 @@ export function PriceChart({
               {prevClose != null && (
                 <ReferenceLine y={prevClose} stroke="var(--text-dim)" strokeDasharray="4 4" />
               )}
-              {/* Invisible bar that drives the candlestick shape rendering */}
-              <Bar dataKey="high" shape={<Candlestick />} isAnimationActive={false} legendType="none" />
+              {/* Hidden bars establish the y-axis domain across high/low; Customized draws candles */}
+              <Bar dataKey="high" fill="transparent" isAnimationActive={false} legendType="none" />
+              <Bar dataKey="low" fill="transparent" isAnimationActive={false} legendType="none" />
+              <Customized component={CandlesLayer as any} />
             </ComposedChart>
           ) : (
             <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
